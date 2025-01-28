@@ -20,6 +20,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build ansible collection
+    outputs:
+      collection_tarball_name: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
     steps:
       - name: Checkout the collection
         uses: actions/checkout@v3
@@ -99,4 +101,4 @@ jobs:
         run: ansible-galaxy collection publish ${COLLECTION_TARBALL}
         shell: bash
         env:
-          COLLECTION_TARBALL: ${{ steps.download.outputs.download-path }}
+          COLLECTION_TARBALL: '${{ steps.download.outputs.download-path }}/${{ needs.build.outputs.collection_tarball_name}}'
