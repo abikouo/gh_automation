@@ -45,7 +45,7 @@ jobs:
           f.close()
           out = open(os.environ.get('GITHUB_OUTPUT'), 'a')
           out.write('fqcn={0}.{1}'.format(galaxy.get('namespace'), galaxy.get('name')))
-          out.close()
+          out.close()"
         shell: bash
 
       - name: Display Full qualified collection name
