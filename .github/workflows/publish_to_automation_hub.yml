@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: collection_tarball
-          path: '${{ steps.find-tarball.outputs.collection_tarball_path }}'
+          path: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
 
   publish:
     name: publish collection tarball
