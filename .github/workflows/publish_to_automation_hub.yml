@@ -1,4 +1,4 @@
-name: Changelog required
+name: Publish to automation hub
 on:
   workflow_call:
     inputs:
