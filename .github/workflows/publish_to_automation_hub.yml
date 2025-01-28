@@ -90,10 +90,10 @@ jobs:
 
       - name: Generate ansible.cfg file
         run: |
-          ansible localhost -m ansible.builtin.template -a 'src=config.j2 dest=ansible.cfg' -e 'automation_hub_token="${TOKEN}"' -v
+          ansible localhost -m ansible.builtin.template -a 'src=config.j2 dest=ansible.cfg' -v
         shell: bash
         env:
-          TOKEN: ${{ inputs.automation_hub_token }}
+          AUTOMATION_HUB_TOKEN: ${{ inputs.automation_hub_token }}
 
       - name: Display config.j2
         run: cat ansible.cfg
