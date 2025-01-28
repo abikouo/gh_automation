@@ -58,8 +58,15 @@ jobs:
         run: ansible-galaxy collection build -v --force
         shell: bash
 
-      - name: Publish colelction tarball
-        run: ansible-galaxy collection publish ${COLLECTION_TARBALL}
+      - name: Find collection tarball
+        run: find . -name '${COLLECTION_FQCN}-${RELEASE_TAG}.tar.gz'
         shell: bash
         env:
-          COLLECTION_TARBALL: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
+          COLLECTION_FQCN: '${{ steps.identify-collection.outputs.fqcn }}'
+          RELEASE_TAG: '${{ inputs.tag }}.tar.gz'
+
+      # - name: Publish colelction tarball
+      #   run: ansible-galaxy collection publish ${COLLECTION_TARBALL}
+      #   shell: bash
+      #   env:
+      #     COLLECTION_TARBALL: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
