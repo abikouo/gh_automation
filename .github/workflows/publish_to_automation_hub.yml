@@ -39,7 +39,7 @@ jobs:
       - name: Identify collection
         id: identify-collection
         run: |-
-          python -c "import yaml;
+          python -c "import yaml, os;
           f = open('galaxy.yml')
           galaxy = yaml.safe_load(f)
           f.close()
