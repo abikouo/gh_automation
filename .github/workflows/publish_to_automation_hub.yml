@@ -1,0 +1,66 @@
+name: Changelog required
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: |
+          The Github repository for the ansible collection to publish
+        required: true
+        type: string
+      tag:
+        description: The tag value
+        required: true
+        type: string
+      automation_hub_token:
+        description: The token used to publish on automation hub.
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build ansible collection
+    steps:
+      - name: Checkout the collection
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.tag }}
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install python dependencies
+        run: pip install -U pyyaml ansible-core
+        shell: bash
+
+      - name: Identify collection
+        id: identify-collection
+        run: |-
+          python -c "import yaml;
+          f = open('galaxy.yml')
+          galaxy = yaml.safe_load(f)
+          f.close()
+          out = open(os.environ.get('GITHUB_OUTPUT'), 'a')
+          out.write('fqcn={0}.{1}'.format(galaxy.get('namespace'), galaxy.get('name')))
+          out.close()
+        shell: bash
+
+      - name: Display Full qualified collection name
+        run: echo "FQCN => ${COLLECTION_NAME}"
+        shell: bash
+        env:
+          COLLECTION_NAME: ${{ steps.identify-collection.outputs.fqcn }}
+
+      - name: Build collection tarball
+        run: ansible-galaxy collection build -v --force
+        shell: bash
+
+      - name: Ensure collection tarball
+        id: find-tarball
+        run: find . -name '${COLLECTION_NAME}-${RELEASE_TAG}.tar.gz'
+        env:
+          COLLECTION_NAME: ${{ steps.identify-collection.outputs.fqcn }}
+          RELEASE_TAG: ${{ inputs.tag }}
