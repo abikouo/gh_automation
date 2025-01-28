@@ -58,11 +58,17 @@ jobs:
         run: ansible-galaxy collection build -v --force
         shell: bash
 
+      - name: Find collection tarball
+        id: find-tarball
+        run: echo "collection_tarball_path='`find . -name '${COLLECTION_TARBALL}'`'" >> $GITHUB_OUTPUT
+        env:
+          COLLECTION_TARBALL: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
+
       - name: Upload collection tarball
         uses: actions/upload-artifact@v4
         with:
           name: collection_tarball
-          path: './${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
+          path: '${{ steps.find-tarball.outputs.collection_tarball_path }}'
 
   publish:
     name: publish collection tarball
