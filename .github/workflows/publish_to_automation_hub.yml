@@ -58,9 +58,34 @@ jobs:
         run: ansible-galaxy collection build -v --force
         shell: bash
 
-      - name: Ensure collection tarball
-        id: find-tarball
-        run: find . -name '${COLLECTION_NAME}-${RELEASE_TAG}.tar.gz'
+      - name: Upload collection tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: collection_tarball
+          path: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
+
+  publish:
+    name: publish collection tarball
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download collection tarball
+        id: download
+        uses: actions/download-artifact@v4
+        with:
+          name: collection_tarball
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install python dependencies
+        run: pip install -U ansible-core
+        shell: bash
+
+      - name: Publish colelction tarball
+        run: ansible-galaxy collection publish ${COLLECTION_TARBALL}
+        shell: bash
         env:
-          COLLECTION_NAME: ${{ steps.identify-collection.outputs.fqcn }}
-          RELEASE_TAG: ${{ inputs.tag }}
+          COLLECTION_TARBALL: ${{ steps.download.outputs.download-path }}
