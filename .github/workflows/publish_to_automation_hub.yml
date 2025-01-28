@@ -17,63 +17,63 @@ on:
         type: string
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    name: Build ansible collection
-    steps:
-      - name: Checkout the collection
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ inputs.repository }}
-          ref: ${{ inputs.tag }}
+  # build:
+  #   runs-on: ubuntu-latest
+  #   name: Build ansible collection
+  #   steps:
+  #     - name: Checkout the collection
+  #       uses: actions/checkout@v3
+  #       with:
+  #         repository: ${{ inputs.repository }}
+  #         ref: ${{ inputs.tag }}
 
-      - name: setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+  #     - name: setup python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.11"
 
-      - name: Install python dependencies
-        run: pip install -U pyyaml ansible-core
-        shell: bash
+  #     - name: Install python dependencies
+  #       run: pip install -U pyyaml ansible-core
+  #       shell: bash
 
-      - name: Identify collection
-        id: identify-collection
-        run: |-
-          python -c "import yaml, os;
-          f = open('galaxy.yml')
-          galaxy = yaml.safe_load(f)
-          f.close()
-          out = open(os.environ.get('GITHUB_OUTPUT'), 'a')
-          out.write('fqcn={0}-{1}'.format(galaxy.get('namespace'), galaxy.get('name')))
-          out.close()"
-        shell: bash
+  #     - name: Identify collection
+  #       id: identify-collection
+  #       run: |-
+  #         python -c "import yaml, os;
+  #         f = open('galaxy.yml')
+  #         galaxy = yaml.safe_load(f)
+  #         f.close()
+  #         out = open(os.environ.get('GITHUB_OUTPUT'), 'a')
+  #         out.write('fqcn={0}-{1}'.format(galaxy.get('namespace'), galaxy.get('name')))
+  #         out.close()"
+  #       shell: bash
 
-      - name: Display Full qualified collection name
-        run: echo "FQCN => ${COLLECTION_NAME}"
-        shell: bash
-        env:
-          COLLECTION_NAME: ${{ steps.identify-collection.outputs.fqcn }}
+  #     - name: Display Full qualified collection name
+  #       run: echo "FQCN => ${COLLECTION_NAME}"
+  #       shell: bash
+  #       env:
+  #         COLLECTION_NAME: ${{ steps.identify-collection.outputs.fqcn }}
 
-      - name: Build collection tarball
-        run: ansible-galaxy collection build -v --force
-        shell: bash
+  #     - name: Build collection tarball
+  #       run: ansible-galaxy collection build -v --force
+  #       shell: bash
 
-      - name: Upload collection tarball
-        uses: actions/upload-artifact@v4
-        with:
-          name: collection_tarball
-          path: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
+  #     - name: Upload collection tarball
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: collection_tarball
+  #         path: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
 
   publish:
     name: publish collection tarball
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download collection tarball
-        id: download
-        uses: actions/download-artifact@v4
-        with:
-          name: collection_tarball
+      # - name: Download collection tarball
+      #   id: download
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: collection_tarball
 
       - name: setup python
         uses: actions/setup-python@v4
@@ -84,4 +84,17 @@ jobs:
         run: pip install -U ansible-core
         shell: bash
 
-      
+      - name: Download template
+        run: wget https://raw.githubusercontent.com/abikouo/gh_automation/refs/heads/main/templates/automation_hub_ansible_cfg.j2 -O config.j2
+        shell: bash
+
+      - name: Generate ansible.cfg file
+        run: |
+          ansible localhost -m ansible.builtin.template -a 'src=config.j2 dest=ansible.cfg' -e 'automation_hub_token=${TOKEN}' -v
+        shell: bash
+        env:
+          TOKEN: ${{ inputs.automation_hub_token }}
+
+      - name: Display config.j2
+        run: cat ansible.cfg
+        shell: bash
