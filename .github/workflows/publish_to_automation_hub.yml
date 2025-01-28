@@ -17,9 +17,9 @@ on:
         type: string
 
 jobs:
-  build:
+  build_and_publish:
     runs-on: ubuntu-latest
-    name: Build ansible collection
+    name: Build and publish
     steps:
       - name: Checkout the collection
         uses: actions/checkout@v3
@@ -58,40 +58,8 @@ jobs:
         run: ansible-galaxy collection build -v --force
         shell: bash
 
-      - name: Find collection tarball
-        id: find-tarball
-        run: echo "collection_tarball_path='`find . -name '${COLLECTION_TARBALL}'`'" >> $GITHUB_OUTPUT
-        env:
-          COLLECTION_TARBALL: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
-
-      - name: Upload collection tarball
-        uses: actions/upload-artifact@v4
-        with:
-          name: collection_tarball
-          path: '${{ steps.find-tarball.outputs.collection_tarball_path }}'
-
-  publish:
-    name: publish collection tarball
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download collection tarball
-        id: download
-        uses: actions/download-artifact@v4
-        with:
-          name: collection_tarball
-
-      - name: setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install python dependencies
-        run: pip install -U ansible-core
-        shell: bash
-
       - name: Publish colelction tarball
         run: ansible-galaxy collection publish ${COLLECTION_TARBALL}
         shell: bash
         env:
-          COLLECTION_TARBALL: ${{ steps.download.outputs.download-path }}
+          COLLECTION_TARBALL: '${{ steps.identify-collection.outputs.fqcn }}-${{ inputs.tag }}.tar.gz'
